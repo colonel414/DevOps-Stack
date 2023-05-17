@@ -58,22 +58,3 @@ https://github.com/sindresorhus/awesome
 
 https://doordash.engineering/2023/03/14/failure-mitigation-for-microservices-an-intro-to-aperture/
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-helm upgrade --install k8s-pod-restart-info-collector ./helm \
-   --set slackWebhookUrl="https://hooks.slack.com/services/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" \
-   --set clusterName="ronford-cluster" \
-   --set slackChannel="rd-infra-alerts"
