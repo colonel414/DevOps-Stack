@@ -1,0 +1,3 @@
+ "user1" "same_password_as_in_server"
+ "ronford" "wv9QMSLpa6ND"
+ "user3" "same_password_as_in_server"

@@ -1,0 +1,180 @@
+global:
+  name: consul
+  datacenter: dc1
+  tls:
+   enabled: true
+   httpsOnly: true
+  acls:
+   manageSystemACLs: true
+  consulSidecarContainer:
+    resources:
+      requests:
+        memory: "25Mi"
+        cpu: "20m"
+      limits:
+        memory: "50Mi"
+        cpu: "20m"
+  imageEnvoy: "envoyproxy/envoy-alpine:v1.21.6"
+connectInject:
+  enabled: true
+  default: true
+  cni:
+    enabled: true
+    logLevel: info
+    cniBinDir: "/opt/cni/bin"
+    cniNetDir: "/etc/cni/net.d"
+    namespaceSelector: |
+      matchLabels:
+        connect-inject : enabled
+server:
+  replicas: 2
+  storageClass: longhorn-sc
+ui:
+  enabled: true
+  service:
+    type: clusterIP
+controller:
+  enabled: true
+apiGateway:
+ enabled: true
+ image: "hashicorp/consul-api-gateway:0.5.0"
+ managedGatewayClass:
+   serviceType: ClusterIP
+   useHostPorts: true
+
+syncCatalog:
+  # True if you want to enable the catalog sync. Set to "-" to inherit from global.enabled.
+  enabled: false
+
+  # The name of the Docker image (including any tag) for consul-k8s to run the sync program.
+  image: null
+
+  # If true, all valid services in K8S are synced by default.
+  default: true
+
+  # Optional priorityClassName.
+  priorityClassName: ""
+
+  # If true, will sync Kubernetes services to Consul. This can be disabled to have a one-way sync.
+  toConsul: true
+
+  # If true, will sync Consul services to Kubernetes. This can be disabled to have a one-way sync.
+  toK8S: true
+
+  # Service prefix to prepend to services before registering with Kubernetes.
+  k8sPrefix: null
+
+  # List of k8s namespaces to sync the k8s services from
+  k8sAllowNamespaces: ["*"]
+
+  # List of k8s namespaces that should not have their services synced. 
+  k8sDenyNamespaces: ["kube-system", "kube-public"]
+
+  # Appends Kubernetes namespace suffix to each service name synced to Consul, separated by a dash.
+  addK8SNamespaceSuffix: true
+
+  # Service prefix which prepends itself to Kubernetes services registered within Consul
+  consulPrefix: null
+
+  # Optional tag that is applied to all of the Kubernetes services that are synced into Consul
+  k8sTag: null
+
+  # Defines the Consul synthetic node that all services will be registered to.
+  consulNodeName: "k8s-sync"
+
+  # Syncs services of the ClusterIP type
+  syncClusterIPServices: true
+
+  # Configures the type of syncing that happens for NodePort services
+  nodePortSyncType: ExternalFirst
+
+  # Refers to a Kubernetes secret that you have created that contains an ACL token for your Consul cluster 
+  aclSyncToken:
+    # The name of the Kubernetes secret.
+    secretName: null
+    # The key of the Kubernetes secret.
+    secretKey: null
+
+  # Resource settings for sync catalog pods.
+  resources:
+    requests:
+      memory: "50Mi"
+      cpu: "50m"
+    limits:
+      memory: "50Mi"
+      cpu: "50m"
+
+# Configures the automatic Connect sidecar injector.
+connectInject:
+  # True if you want to enable connect injection. Set to "-" to inherit from global.enabled.
+  enabled: "-"
+
+  # The number of deployment replicas.
+  replicas: 2
+
+  # Image for consul-k8s that contains the injector
+  image: null
+
+  # If true, the injector will inject the Connect sidecar into all pods by default
+  default: false
+
+  # # Configures Transparent Proxy for Consul Service mesh services
+  # transparentProxy:
+  #   # If true, then all Consul Service mesh will run with transparent proxy enabled by default
+  #   defaultEnabled: true
+
+  #   # If true, we will overwrite Kubernetes HTTP probes of the pod to point to the Envoy proxy instead
+  #   defaultOverwriteProbes: true
+
+  # Configures metrics for Consul Connect services
+  metrics:
+    defaultEnabled: "-"
+    # Configures the Consul sidecar to run a merged metrics server to combine and serve both Envoy and Connect service metrics.
+    defaultEnableMerging: false
+    # Configures the port at which the Consul sidecar will listen on to return combined metrics
+    defaultMergedMetricsPort: 20100
+    # Configures the port Prometheus will scrape metrics from
+    defaultPrometheusScrapePort: 20200
+    # Configures the path Prometheus will scrape metrics from
+    defaultPrometheusScrapePath: "/metrics"
+
+  # Resource settings for connect inject pods.
+  resources:
+    requests:
+      memory: "50Mi"
+      cpu: "50m"
+    limits:
+      memory: "50Mi"
+      cpu: "50m"
+
+  # List of k8s namespaces to allow Connect sidecar injection 
+  k8sAllowNamespaces: ["*"]
+
+  # List of k8s namespaces that should not allow Connect sidecar injection
+  k8sDenyNamespaces: []
+
+  # Which Service Accounts can authenticate to Consul and receive an ACL token during Connect injection
+  aclBindingRuleSelector: "serviceaccount.name!=default"
+
+  # If you are manually setting up an auth method for Connect inject, set this to the name of your auth method.
+  overrideAuthMethodName: ""
+
+  sidecarProxy:
+    # Set default resources for sidecar proxy. If null, that resource won't be set.
+    resources:
+      requests:
+        memory: "100Mi"
+        cpu: "100m"
+      limits:
+        memory: "100Mi"
+        cpu: "100m"
+
+  # Resource settings for the Connect injected init container.
+  initContainer:
+    resources:
+      requests:
+        memory: "25Mi"
+        cpu: "50m"
+      limits:
+        memory: "150Mi"
+        cpu: "50m"

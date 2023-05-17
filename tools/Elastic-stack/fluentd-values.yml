@@ -1,0 +1,107 @@
+image:
+  repository: quay.io/fluentd_elasticsearch/fluentd
+  # if empty uses appVersion from Chart.yaml as default image tag
+  tag: "latest"
+  ## Specify an imagePullPolicy (Required)
+  ## It's recommended to change this to 'Always' if the image tag is 'latest'
+  ## ref: http://kubernetes.io/docs/user-guide/images/#updating-images
+  pullPolicy: Always
+  ## Optionally specify an array of imagePullSecrets.
+  ## Secrets must be manually created in the namespace.
+  ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+  ##
+  # pullSecrets:
+  #   - myRegistrKeySecretName
+
+fluentConfDir: "/etc/fluent/config.d"
+
+# Specify where fluentd can find logs
+hostLogDir:
+  varLog: /var/log
+  dockerContainers: /var/lib/docker/containers
+  libSystemdDir: /usr/lib64
+
+## Configure resource requests and limits
+## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+##
+resources: {}
+  limits:
+    cpu: 50m
+    memory: 100Mi
+  requests:
+    cpu: 50m
+    memory: 100Mi
+
+elasticsearch:
+  auth:
+    enabled: true
+    user: fluentd
+    password: 3R&zLHn8v5
+  includeTagKey: true
+  setOutputHostEnvVar: true
+  # If setOutputHostEnvVar is false the hosts value is ignored
+  # If you are configuring an AWS signing sidecar, hosts should be the network
+  # address of the sidecar, like "localhost:8080"
+  hosts: ["10.2.6.144:9200"]
+  indexName: "fluentd"
+  logstash:
+    enabled: true
+    prefix: "logstash"
+    prefixSeparator: "-"
+    dateformat: "%Y.%m.%d"
+
+# Specifies the output format of fluentd's own log messages. Set to
+# "json" to enable structured logging.
+# See https://docs.fluentd.org/deployment/logging#log-format
+fluentdLogFormat: "text"
+
+rbac:
+  create: true
+
+serviceAccount:
+  # Specifies whether a ServiceAccount should be created
+  create: true
+  # The name of the ServiceAccount to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+  annotations: {}
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 600
+  periodSeconds: 60
+  kind:
+    exec:
+      command:
+      # Liveness probe is aimed to help in situations where fluentd
+      # silently hangs for no apparent reasons until manual restart.
+      # The idea of this probe is that if fluentd is not queueing or
+      # flushing chunks for 5 minutes, something is not right. If
+      # you want to change the fluentd configuration, reducing amount of
+      # logs fluentd collects, consider changing the threshold or turning
+      # liveness probe off completely.
+      - '/bin/sh'
+      - '-c'
+      - |
+        LIVENESS_THRESHOLD_SECONDS=${LIVENESS_THRESHOLD_SECONDS:-300};
+        STUCK_THRESHOLD_SECONDS=${STUCK_THRESHOLD_SECONDS:-900};
+        BUFFER_PATH=${BUFFER_PATH:-/var/log/fluentd-buffers/kubernetes.system.buffer}
+        if [ ! -e ${BUFFER_PATH} ];
+        then
+          echo "Expected file ${BUFFER_PATH} does not exist. This is likely a configuration issue.";
+          exit 1;
+        fi;
+        touch -d "${STUCK_THRESHOLD_SECONDS} seconds ago" /tmp/marker-stuck;
+        if [ -n "$(find ${BUFFER_PATH} -mindepth 1 -type d ! -newer /tmp/marker-stuck -print -quit)" ];
+        then
+          echo "Elasticsearch buffer found stuck longer than $STUCK_THRESHOLD_SECONDS seconds. Clearing buffer."
+          rm -rf ${BUFFER_PATH};
+          exit 1;
+        fi;
+        touch -d "${LIVENESS_THRESHOLD_SECONDS} seconds ago" /tmp/marker-liveness;
+        if [ -n "$(find ${BUFFER_PATH} -mindepth 1 -type d ! -newer /tmp/marker-liveness -print -quit)" ];
+        then
+          echo "Elasticsearch buffer found stuck longer than $LIVENESS_THRESHOLD_SECONDS seconds."
+          exit 1;
+        fi;
+

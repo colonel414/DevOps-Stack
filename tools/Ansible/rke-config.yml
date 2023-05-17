@@ -1,0 +1,17 @@
+nodes:
+  - address: 192.168.1.1
+    role:
+      - controlplane
+      - etcd
+  - address: 192.168.1.2
+    role:
+      - worker
+  - address: 192.168.1.3
+    role:
+      - worker
+  - address: 192.168.1.4
+    role:
+      - worker
+  - address: 192.168.1.5
+    role:
+      - worker

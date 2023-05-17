@@ -1,0 +1,21 @@
+gitops:
+  manifest_projects: #Projects where your Kubernetes manifests are stored
+  - id: gitlab-org/cluster-integration/gitlab-agent #Path to a Git repository that has Kubernetes manifests in YAML or JSON format
+    ref: # either `branch`, `tag` or `commit` can be specified
+      branch: production
+      # commit: <mysha>
+      # tag: v1.0
+    default_namespace: my-ns #Namespace to use if not set explicitly in object manifest
+    paths: #Repository paths to scan for manifest files
+      # Read all YAML files from this directory.
+    - glob: '/team1/app1/*.yaml'
+      # Read all .yaml files from team2/apps and all subdirectories.
+    - glob: '/team2/apps/**/*.yaml'
+      # If 'paths' is not specified or is an empty list, the configuration below is used.
+    - glob: '/**/*.{yaml,yml,json}'
+    reconcile_timeout: 3600s
+    dry_run_strategy: none #Determines whether changes should be performed. Can be: none, client, or server
+    prune: true
+    prune_timeout: 3600s
+    prune_propagation_policy: foreground
+    inventory_policy: must_match

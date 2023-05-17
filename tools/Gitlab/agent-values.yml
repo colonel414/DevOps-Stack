@@ -1,0 +1,96 @@
+image:
+  repository: "registry.gitlab.com/gitlab-org/cluster-integration/gitlab-agent/agentk"
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+rbac:
+  # Specifies whether RBAC resources should be created
+  create: true
+  ## Set to a rolename to use existing role. Default is cluster-admin
+  # useExistingRole: somerolename
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  # name: ""
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+# runAsUser: 1000
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/path: "/metrics"
+  prometheus.io/port: "8080"
+
+config:
+  kasAddress: 'wss://kas.gitlab.com'
+  # kasHeaders:
+  #   - "Cookie: gitlab-canary"
+  token: "cQV7RXdE1REjyn8Bq-9EbbhF8u_bQzCe6afBkcsNWeyEyz4aJA"
+  # secretName: "ronford-agent"
+  # caCert: "PEM certificate file to use to verify config.kasAddress. Useful if config.kasAddress is self-signed."
+
+  observability:
+    # Application-level TLS configuration for the observability service
+    tls:
+      enabled: false
+      # cert: "Public key for the TLS certificate"
+      # key: "Private key for the TLS certificate"
+      secret: {}
+        # create: false # when true, creates a certificate with values cert and key from above
+        # name: "gitlab-agent-observability"
+
+# extraEnv: []
+# Add additional environment settings to the pod. Can be useful in proxy
+# environments
+
+resources: {}
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+## list of hosts and IPs that will be injected into the pod's hosts file
+hostAliases: []
+  # Example:
+  # - ip: "127.0.0.1"
+  #   hostnames:
+  #   - "foo.local"
+  #   - "bar.local"
+  # - ip: "10.1.2.3"
+  #   hostnames:
+  #   - "foo.remote"
+  #   - "bar.remote"
+
+# Labels to be added to each agent pod
+podLabels: {}
+  # Example:
+  # role: developer
+
+# Additional labels to be added to all created objects
+additionalLabels: {}

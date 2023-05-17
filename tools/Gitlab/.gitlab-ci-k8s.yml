@@ -1,0 +1,55 @@
+## Set the CI/CD variable $KUBE_CONTEXT through the GitLab UI, or set it here by
+## uncommenting the following two lines and replacing the Agent's path with your
+## own. See https://docs.gitlab.com/ee/user/clusters/agent/ci_cd_tunnel.html
+
+variables:
+  KUBE_CONTEXT: .gitlab/agents/ronford-agent:ronford-agent
+
+.base:
+  image: "registry.gitlab.com/gitlab-org/cluster-integration/cluster-applications:v1.6.1"
+  before_script:
+    # - chmod 400 "$KUBECONFIG"   # Workaround for https://gitlab.com/gitlab-org/gitlab/-/issues/327912
+    - gl-use-kube-context
+
+stages:
+  - build
+  - package
+  - deploy
+
+build:
+  extends: .base
+  stage: build
+  environment:
+    name: production
+    action: prepare
+  script:
+    - gl-helmfile --file $CI_PROJECT_DIR/helmfile.yaml build --suppress-secrets
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+package:
+  extends: .base
+  stage: package
+  environment:
+    name: production
+  script:
+    - gl-ensure-namespace gitlab-managed-apps
+    - gl-helmfile --file $CI_PROJECT_DIR/helmfile.yaml package
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      when: never
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+
+deploy:
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: ['']
+  script:
+    - kubectl config get-contexts
+    - kubectl config use-context .gitlab/agents/ronford-agent:ronford-agent
+    - kubectl get pods
+
+    

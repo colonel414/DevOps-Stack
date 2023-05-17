@@ -1,0 +1,120 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: linkerd-proxy-inbound
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: linkerd
+spec:
+  endpoints:
+  - port: proxy-inbound
+    interval: 10s
+    scrapeTimeout: 5s
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: linkerd-proxy-inbound
+      linkerd.io/control-plane-component: proxy
+
+
+---
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: linkerd-prometheus
+  namespace: linkerd
+  labels:
+    app: linkerd
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: linkerd-controller-api
+  endpoints:
+  - port: grpc-metrics
+    interval: 15s
+    scrapeTimeout: 10s
+    tlsConfig:
+      insecureSkipVerify: true
+    bearerTokenFile: /var/run/linkerd/k8s/token
+    honorLabels: true
+    path: /metrics
+    params:
+      pretty: "true"
+    targetPort: 4190
+  - port: public-metrics
+    interval: 15s
+    scrapeTimeout: 10s
+    tlsConfig:
+      insecureSkipVerify: true
+    bearerTokenFile: /var/run/linkerd/k8s/token
+    honorLabels: true
+    path: /metrics
+    params:
+      pretty: "true"
+    targetPort: 4191
+  - port: admin-http
+    interval: 15s
+    scrapeTimeout: 10s
+    tlsConfig:
+      insecureSkipVerify: true
+    bearerTokenFile: /var/run/linkerd/k8s/token
+    honorLabels: true
+    path: /admin/metrics/prometheus
+    params:
+      pretty: "true"
+    targetPort: 9990
+  - port: ingress
+    interval: 15s
+    scrapeTimeout: 10s
+    tlsConfig:
+      insecureSkipVerify: true
+    bearerTokenFile: /var/run/linkerd/k8s/token
+    honorLabels: true
+    path: /metrics
+    params:
+      pretty: "true"
+    targetPort: 9995
+  - port: public-api
+    interval: 15s
+    scrapeTimeout: 10s
+    tlsConfig:
+      insecureSkipVerify: true
+    bearerTokenFile: /var/run/linkerd/k8s/token
+    honorLabels: true
+    path: /metrics
+    params:
+      pretty: "true"
+    targetPort: 4192
+  - port: controller-api
+    interval: 15s
+    scrapeTimeout: 10s
+    tlsConfig:
+      insecureSkipVerify: true
+    bearerTokenFile: /var/run/linkerd/k8s/token
+    honorLabels: true
+    path: /metrics
+    params:
+      pretty: "true"
+    targetPort: 9991
+  - port: tap
+    interval: 15s
+    scrapeTimeout: 10s
+    tlsConfig:
+      insecureSkipVerify: true
+    bearerTokenFile: /var/run/linkerd/k8s/token
+    honorLabels: true
+    path: /metrics
+    params:
+      pretty: "true"
+    targetPort: 8088
+  - port: tap-injector
+    interval: 15s
+    scrapeTimeout: 10s
+    tlsConfig:
+      insecureSkipVerify: true
+    bearerTokenFile: /var/run/linkerd/k8s/token
+    honorLabels: true
+    path: /metrics
+    params:
+      pretty: "true"
+    targetPort: 8089

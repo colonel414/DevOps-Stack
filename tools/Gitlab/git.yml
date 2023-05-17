@@ -1,0 +1,72 @@
+.mtech-adaptor:
+    extends: .base-rules
+    variables:
+      RULES_CHANGES_PATH: "MtechAdapter/**/*"
+      PROJECT_NAME: "MtechAdapter"
+      TEST: "NcbaNotificationsService.Tests/**/**/**/*"
+  
+  mtech-adaptor-build:
+    stage: build
+    extends: .mtech-adaptor
+    image: $API_BUILD_IMAGE
+    needs: []
+    script:
+      - echo "Building MTECH adaptor service..."
+      - cd $PROJECT_NAME
+      - dotnet restore
+      - dotnet build --configuration Release
+      - dotnet publish --configuration Release --output ../app/publish/
+    artifacts:
+      paths:
+      - ./app/publish/
+      expire_in: 15 mins
+    tags:
+      - docker
+  
+    mtech-adaptor-test:
+      stage: test
+      script:
+      - cd $TEST
+      - dotnet test  
+    dependencies:
+      - mtech-adaptor-build
+  
+  mtech-adaptor-dockerize:
+    stage: dockerize
+    extends: .mtech-adaptor
+    image: docker:stable
+    services:
+      - docker:dind
+    variables:
+      DOCKER_DRIVER: overlay2
+      DOCKER_TLS_CERTDIR: ""
+    needs: ["mtech-adaptor-test"]
+    script:
+      - echo "Dockerize mtech-adaptor ..."
+      # Prepare Dockerfile
+      - sed -i "s~\$DOCKERIMAGE~$API_RUNTIME_IMAGE~g" Dockerfile
+      - sed -i "s/\$ENTRYPOINT/$PROJECT_NAME.dll/g" Dockerfile
+  
+      # Process Dockerfile
+      - docker build -t $CI_REGISTRY_IMAGE/mtech-adaptor-$CI_COMMIT_REF_NAME:latest .
+      - docker tag $CI_REGISTRY_IMAGE/mtech-adaptor-$CI_COMMIT_REF_NAME:latest $CI_REGISTRY_IMAGE/mtech-adaptor-$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
+      - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+      - docker push $CI_REGISTRY_IMAGE/mtech-adaptor-$CI_COMMIT_REF_NAME:latest
+      - docker push $CI_REGISTRY_IMAGE/mtech-adaptor-$CI_COMMIT_REF_NAME:$CI_COMMIT_SHORT_SHA
+    tags:
+      - docker
+  
+  mtech-adaptor-deploy:
+    stage: deploy
+    extends: .mtech-adaptor
+    needs: ["mtech-adaptor-dockerize"]
+    script:
+      - echo "Deploying the mtech-adaptor ..."
+      - cd /home/duncan/apps/ncba/ke/notifications/mtech
+      - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+      - docker pull $CI_REGISTRY_IMAGE/mtech-adaptor-$CI_COMMIT_REF_NAME:latest
+      - docker-compose down
+      - docker-compose up -d
+    tags:
+      - ronford
+  

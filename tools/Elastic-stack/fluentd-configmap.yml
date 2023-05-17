@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluentd-config
+  namespace: observability
+data:
+  fluent.conf: |
+    <source>
+      @type forward
+    </source>
+    <match **>
+      @type elasticsearch
+      host 10.2.6.144
+      port 9200
+      scheme https
+      user fluentd
+      password 3R&zLHn8v5
+    </match>

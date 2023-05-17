@@ -1,0 +1,21 @@
+ci_access:
+  projects:
+    - id: path/to/project
+
+---
+
+ci_access:
+  groups:
+    - id: path/to/group/subgroup
+
+
+---
+
+deploy:
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: ['']
+  script:
+    - kubectl config get-contexts
+    - kubectl config use-context path/to/agent/repository:agent-name
+    - kubectl get pods

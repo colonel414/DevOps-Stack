@@ -1,0 +1,148 @@
+# If you intended to deploy Kubernetes in an air-gapped environment,
+# please consult the documentation on how to configure custom RKE images.
+nodes:
+  - address: 192.265.653.99
+    port: "22"
+    internal_address: ""
+    role:
+      - controlplane
+      - etcd
+    hostname_override: rke-master1
+    user: rke
+    docker_socket: /var/run/docker.sock
+    ssh_key: ""
+    ssh_key_path: ~/.ssh/id_rsa
+    ssh_cert: ""
+    ssh_cert_path: ""
+    labels: {}
+    taints: []
+  - address: 192.265.655.151
+    port: "22"
+    internal_address: ""
+    role:
+      - controlplane
+      - etcd
+    hostname_override: rke-master2
+    user: rke
+    docker_socket: /var/run/docker.sock
+    ssh_key: ""
+    ssh_key_path: ~/.ssh/id_rsa
+    ssh_cert: ""
+    ssh_cert_path: ""
+    labels: {}
+    taints: []
+  - address: 192.265.653.5
+    port: "22"
+    internal_address: ""
+    role:
+      - worker
+    hostname_override: rke-worker1
+    user: rke
+    docker_socket: /var/run/docker.sock
+    ssh_key: ""
+    ssh_key_path: ~/.ssh/id_rsa
+    ssh_cert: ""
+    ssh_cert_path: ""
+    labels: {}
+    taints: []
+  - address: 192.265.651.181
+    port: "22"
+    internal_address: ""
+    role:
+      - worker
+    hostname_override: rke-worker2
+    user: rke
+    docker_socket: /var/run/docker.sock
+    ssh_key: ""
+    ssh_key_path: ~/.ssh/id_rsa
+    ssh_cert: ""
+    ssh_cert_path: ""
+    labels: {}
+    taints: []
+  - address: 192.265.660.17
+    port: "22"
+    internal_address: ""
+    role:
+      - worker
+    hostname_override: rke-worker3
+    user: rke
+    docker_socket: /var/run/docker.sock
+    ssh_key: ""
+    ssh_key_path: ~/.ssh/id_rsa
+    ssh_cert: ""
+    ssh_cert_path: ""
+    labels: {}
+    taints: []
+network:
+  plugin: canal
+  options: {}
+  mtu: 0
+  node_selector: {}
+  update_strategy: null
+  tolerations: []
+authentication:
+  strategy: x509
+  sans: []
+  webhook: null
+addons: ""
+addons_include:
+ssh_key_path: ~/.ssh/id_rsa
+ssh_cert_path: ""
+ssh_agent_auth: true
+authorization:
+  mode: rbac
+  options: {}
+ignore_docker_version: true
+enable_cri_dockerd: false
+kubernetes_version: ""
+private_registries:
+  - url: registry.example.com
+    user: admin
+    password: "password"
+    is_default: true
+ingress:
+  provider: ""
+  options: {}
+  node_selector: {}
+  extra_args: {}
+  dns_policy: ""
+  extra_envs: []
+  extra_volumes: []
+  extra_volume_mounts: []
+  update_strategy: null
+  http_port: 0
+  https_port: 0
+  network_mode: ""
+  tolerations: []
+  default_backend: true
+  default_http_backend_priority_class_name: ""
+  nginx_ingress_controller_priority_class_name: ""
+cluster_name: "cluster.local"
+cloud_provider:
+  name: ""
+prefix_path: ""
+win_prefix_path: ""
+addon_job_timeout: 0
+bastion_host:
+  address: ""
+  port: ""
+  user: ""
+  ssh_key: ""
+  ssh_key_path: ""
+  ssh_cert: ""
+  ssh_cert_path: ""
+  ignore_proxy_env_vars: false
+monitoring:
+  provider: ""
+  options: {}
+  node_selector: {}
+  update_strategy: null
+  replicas: 1
+  tolerations: []
+  metrics_server_priority_class_name: ""
+restore:
+  restore: false
+  snapshot_name: ""
+rotate_encryption_key: false
+dns:
+  provider: coredns

@@ -1,0 +1,40 @@
+version: '2.1'
+services:
+  pgbouncer:
+    image: docker.io/bitnami/pgbouncer:1
+    ports:
+      - 6432:6432
+    environment:
+      - POSTGRESQL_USERNAME= [USERNAME]
+      - POSTGRESQL_PASSWORD= [PASSWORD]
+      - POSTGRESQL_DATABASE= [DATABASE]
+      - POSTGRESQL_HOST= [IP_ADDRESS]
+      - POSTGRESQL_PORT= 5432
+      - PGBOUNCER_SET_DATABASE_USER= No
+      - PGBOUNCER_SET_DATABASE_PASSWORD= No
+      - PGBOUNCER_POOL_MODE= transaction
+
+
+
+docker run \
+  -e "POSTGRESQL_HOST=[IP_ADDRESS]" \
+  -e "POSTGRESQL_USERNAME=[USER]" \
+  -e "POSTGRESQL_PASSWORD=[PASSWORD]" \
+  -e "POSTGRESQL_DATABASE=[DATABASE]" \
+  -e "POSTGRESQL_PORT= 5432" \
+  -e "PGBOUNCER_POOL_MODE=transaction" \
+  -e "PGBOUNCER_HOST=pgbouncer" \
+  -e "PGBOUNCER_PORT=6432" \
+  -e "PGBOUNCER_ADDR=*" \
+  -e "PGBOUNCER_DATABASE=$POSTGRESQL_DATABASE" \
+  -e "PGBOUNCER_AUTH_USER=[USER]" \
+  --name=pgbouncer \
+  bitnami/pgbouncer:1
+
+  psql -h [IP_ADDRESS] -U [USER] -d [DATABASE] -p 6432 -W
+
+
+
+docker run --name pgbouncer \
+  -v /pgbouncer/pgbouncer.ini \
+  bitnami/pgbouncer:latest

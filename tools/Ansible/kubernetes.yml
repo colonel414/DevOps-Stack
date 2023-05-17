@@ -1,0 +1,59 @@
+- hosts: kube-cluster
+  become: yes
+
+  vars:
+    ansible_user: $user
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+    ansible_python_interpreter: /usr/bin/python3
+
+  tasks:
+    - name: Disable root login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin no'
+        backup: yes
+      notify: restart sshd
+
+    - name: Create $user user
+      user:
+        name: $user
+        groups: wheel
+        password: "{{ 'password' | password_hash('sha512', 'mysecretsalt') }}"
+        createhome: yes
+
+    - name: Install docker
+      yum:
+        name: docker-ce
+        state: present
+
+    - name: Start docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Install RKE
+      get_url:
+        url: https://github.com/rancher/rke/releases/download/v1.2.10/rke_linux-amd64
+        dest: /usr/local/bin/rke
+        mode: 'a+x'
+
+    - name: Copy RKE config file
+      copy:
+        src: rke_config.yml
+        dest: /home/$user/rke_config.yml
+        owner: $user
+        group: $user
+        mode: '0644'
+
+    - name: Run RKE
+      shell: |
+        cd /home/$user
+        rke up --config rke_config.yml
+
+  handlers:
+    - name: restart sshd
+      systemd:
+        name: sshd
+        state: restarted

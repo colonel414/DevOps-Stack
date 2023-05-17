@@ -1,0 +1,303 @@
+# Declare variables to be passed into your templates.
+
+# -- control plane version. See Proxy section for proxy version
+linkerdVersion: 
+# -- Kubernetes DNS Domain name to use
+clusterDomain: cluster.local
+# -- Additional labels to add to all pods
+podLabels: {}
+# -- Labels to apply to all resources
+commonLabels: {}
+# -- Trust domain used for identity
+# @default -- clusterDomain
+identityTrustDomain: ""
+
+# -- Docker registry for all viz components
+defaultRegistry: cr.l5d.io/linkerd
+# -- Docker imagePullPolicy for all viz components
+defaultImagePullPolicy: IfNotPresent
+# -- Log level for all the viz components
+defaultLogLevel: info
+# -- Log format (`plain` or `json`) for all the viz components.
+defaultLogFormat: plain
+# -- UID for all the viz components
+defaultUID: 2103
+
+# -- Namespace of the Linkerd core control-plane install
+linkerdNamespace: linkerd
+
+nodeSelector: &default_node_selector
+  kubernetes.io/os: linux
+
+imagePullSecrets: []
+# - name: my-private-docker-registry-login-secret
+
+# -- Default tolerations section
+tolerations: &default_tolerations
+
+# -- Enables Pod Anti Affinity logic to balance the placement of replicas
+# across hosts and zones for High Availability.
+# Enable this only when you have multiple replicas of components.
+enablePodAntiAffinity: false
+
+# -- NodeAffinity section
+# nodeAffinity:
+
+# -- url of external prometheus instance
+prometheusUrl: ""
+
+# -- url of external jaeger instance
+# Set to `jaeger.linkerd-jaeger.svc.cluster.local:16686` - to use jaeger extension
+jaegerUrl: ""
+
+# metrics API configuration
+metricsAPI:
+  replicas: 1
+  logLevel: ""
+  logFormat: ""
+  image:
+    registry: ""
+    name: metrics-api
+    tag: ""
+    pullPolicy: ""
+
+  resources:
+    cpu:
+      limit:
+      request:
+    memory:
+      limit:
+      request:
+    ephemeral-storage:
+      limit: ""
+      request: ""
+
+  proxy:
+    resources:
+  UID:
+
+  nodeSelector: *default_node_selector
+  tolerations: *default_tolerations
+
+  service:
+    annotations: {}
+
+# tap configuration
+tap:
+  replicas: 1
+  logLevel: ""
+  logFormat: ""
+  image:
+    registry: ""
+    name: tap
+    tag: ""
+    pullPolicy: ""
+  externalSecret: false
+
+  crtPEM: |
+
+  keyPEM: |
+
+  caBundle: |
+
+  injectCaFrom: ""
+
+  injectCaFromSecret: ""
+
+  resources:
+    cpu:
+      limit:
+      request:
+    memory:
+      limit:
+      request:
+    ephemeral-storage:
+      limit: ""
+      request: ""
+
+  proxy:
+    resources:
+
+  # -- UID for the dashboard resource
+  UID:
+
+  # -- tap service configuration
+  service:
+    annotations: {}
+
+# tapInjector configuration
+tapInjector:
+  replicas: 1
+  logLevel: ""
+  logFormat: ""
+  image:
+    registry: ""
+    name: tap
+    tag: ""
+    pullPolicy: ""
+
+  namespaceSelector:
+    matchExpressions:
+    - key: runlevel
+      operator: NotIn
+      values: ["0","1"]
+  objectSelector:
+    matchLabels:
+      foo: bar
+  # -- UID for the tapInjector resource
+  UID:
+
+  failurePolicy: Ignore
+  resources:
+    cpu:
+      limit:
+      request:
+    memory:
+      limit:
+      request:
+    ephemeral-storage:
+      limit: ""
+      request: ""
+  proxy:
+    resources:
+
+  externalSecret: false
+
+  crtPEM: |
+
+  keyPEM: |
+
+  caBundle: |
+
+  injectCaFrom: ""
+
+  injectCaFromSecret: ""
+
+  # -- tap service configuration
+  service:
+    annotations: {}
+
+# web dashboard configuration
+dashboard:
+  replicas: 1
+  logLevel: ""
+  logFormat: ""
+  image:
+    registry: ""
+    name: web
+    tag: ""
+    pullPolicy: ""
+
+  # -- UID for the dashboard resource
+  UID:
+
+  # -- Restrict the Linkerd Dashboard's default privileges to disallow Tap and Check
+  restrictPrivileges: false
+
+  # -- Host header validation regex for the dashboard
+  enforcedHostRegexp: ""
+  resources:
+    cpu:
+      limit:
+      request:
+    memory:
+      limit:
+      request:
+    ephemeral-storage:
+      limit: ""
+      request: ""
+
+  proxy:
+    resources:
+
+  # -- dashboard service configuration
+  service:
+    annotations: {}
+
+namespaceMetadata:
+  image:
+    registry: cr.l5d.io/linkerd
+    name: extension-init
+    tag: v0.1.0
+    pullPolicy: ""
+
+grafana:
+  # -- url of an in-cluster Grafana instance with reverse proxy configured
+  url:
+  # -- url of a Grafana instance hosted off-cluster. 
+  externalUrl:
+  uidPrefix:
+
+prometheus:
+  enabled: true
+  image:
+    registry: prom
+    name: prometheus
+    tag: v2.30.3
+    pullPolicy: ""
+
+  logLevel: ""
+  logFormat: ""
+  # -- Command line options for Prometheus binary
+  args:
+    storage.tsdb.path: /data
+    storage.tsdb.retention.time: 6h
+    config.file: /etc/prometheus/prometheus.yml
+  # -- The global configuration specifies parameters that are valid in all other
+  # configuration contexts.
+  globalConfig:
+    scrape_interval: 10s
+    scrape_timeout: 10s
+    evaluation_interval: 10s
+
+  # Alertmanager.
+  alertRelabelConfigs:
+  # Ex:
+  # - action: labeldrop
+  #   regex: prometheus_replica
+
+  # -- Alertmanager instances the Prometheus server sends alerts to 
+  alertmanagers:
+  # Ex:
+  # - scheme: http
+  #   static_configs:
+  #   - targets:
+  #     - "alertmanager.linkerd.svc:9093"
+
+  # -- Allows transparently sending samples to an endpoint for long term storage.
+  remoteWrite:
+
+  ruleConfigMapMounts:
+  # Ex:
+  # - name: alerting-rules
+  #   subPath: alerting_rules.yml
+  #   configMap: linkerd-prometheus-rules
+  # - name: recording-rules
+  #   subPath: recording_rules.yml
+  #   configMap: linkerd-prometheus-rules
+
+  # -- A set of targets and parameters describing how to scrape them.
+  scrapeConfigs:
+  # Ex:
+  # - job_name: 'kubernetes-nodes'
+  #   scheme: https
+  #   tls_config:
+  #     ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+  #   bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+  #   kubernetes_sd_configs:
+  #   - role: node
+  #   relabel_configs:
+  #   - action: labelmap
+  #     regex: __meta_kubernetes_node_label_(.+)
+  resources:
+    cpu:
+      limit:
+      request:
+    memory:
+      limit:
+      request:
+    ephemeral-storage:
+      limit: ""
+      request: ""
+  nodeSelector: *default_node_selector
+  tolerations: *default_tolerations
